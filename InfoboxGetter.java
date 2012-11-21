@@ -100,7 +100,7 @@ public class InfoboxGetter {
         conf.set("xmlinput.end", "</page>");
 
         FileInputFormat.setInputPaths(conf, new Path("/user/hduser"));
-        FileOutputFormat.setOutputPath(conf, new Path("/user/output"));
+        FileOutputFormat.setOutputPath(conf, new Path(args[0]));
 
         JobClient.runJob(conf);
     }
