@@ -27,36 +27,29 @@ public class InfoboxGetter {
 
             String xmlString = value.toString();
 
-            output.collect(key, value);
+            //output.collect(key, value);
             //SAXBuilder builder = new SAXBuilder();
             //Reader in = new StringReader(xmlString);
             try {
 
-                //InputSource is = new InputSource(new StringReader(value.toString()));
-                //DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-                //DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-                //Document doc = dBuilder.parse(is);
-                //doc.getDocumentElement().normalize();
+                InputSource is = new InputSource(new StringReader(value.toString()));
+                DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+                DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+                Document doc = dBuilder.parse(is);
+                doc.getDocumentElement().normalize();
 
-                //NodeList nList = doc.getElementsByTagName("page");
+                NodeList nList = doc.getElementsByTagName("page");
 
-                //boolean debug = true;
-                //int count = 0;
-                //for (int temp = 0; temp < nList.getLength(); temp++) {
-                //    if (debug == true) {
-                //        if (count > 100) break;
-                //        else ++count;
-                //    }
-                //    Node nNode = nList.item(temp);
-                //    if (nNode.getNodeType() == Node.ELEMENT_NODE) {
-                //        Element eElement = (Element) nNode;
-                //        String infoBoxText = parseInfoBox(getTagValue("text", eElement));
-                //        int id = Integer.parseInt(getTagValue("id", eElement));
-                //        if (infoBoxText != null) {
-                //            context.write(new IntWritable(id), new Text(infoBoxText));
-                //        }
-                //    }
-                //}
+                Node nNode = nList.item(0);
+                if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+                    Element eElement = (Element) nNode;
+                    String infoBoxText = parseInfoBox(getTagValue("text", eElement));
+                    int id = Integer.parseInt(getTagValue("id", eElement));
+                    if (infoBoxText != null) {
+                        //context.write(new IntWritable(id), new Text(infoBoxText));
+                        output.collect(new LongWritable(id), new Text(infoBoxText));
+                    }
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
