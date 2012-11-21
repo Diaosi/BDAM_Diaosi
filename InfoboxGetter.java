@@ -19,36 +19,43 @@ import java.io.File;
 import org.xml.sax.InputSource;
 
 public class InfoboxGetter {
-    public static class Map extends MapReduceBase implements Mapper<IntWritable, Text, IntWritable, Text> {
+    public static class Map extends MapReduceBase implements Mapper<LongWritable, Text, LongWritable, Text> {
 
-        public void map(IntWritable key, Text value, Context context, Reporter reporter) throws IOException, InterruptedException {
+        @Override
+        public void map(LongWritable key, Text value, OutputCollector<LongWritable, Text> output, Reporter reporter) throws IOException{
 
+            String xmlString = value.toString();
+
+            output.collect(key, value);
+            //SAXBuilder builder = new SAXBuilder();
+            //Reader in = new StringReader(xmlString);
             try {
-                InputSource is = new InputSource(new StringReader(value.toString()));
-                DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-                DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-                Document doc = dBuilder.parse(is);
-                doc.getDocumentElement().normalize();
 
-                NodeList nList = doc.getElementsByTagName("page");
+                //InputSource is = new InputSource(new StringReader(value.toString()));
+                //DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+                //DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+                //Document doc = dBuilder.parse(is);
+                //doc.getDocumentElement().normalize();
 
-                boolean debug = true;
-                int count = 0;
-                for (int temp = 0; temp < nList.getLength(); temp++) {
-                    if (debug == true) {
-                        if (count > 100) break;
-                        else ++count;
-                    }
-                    Node nNode = nList.item(temp);
-                    if (nNode.getNodeType() == Node.ELEMENT_NODE) {
-                        Element eElement = (Element) nNode;
-                        String infoBoxText = parseInfoBox(getTagValue("text", eElement));
-                        int id = Integer.parseInt(getTagValue("id", eElement));
-                        if (infoBoxText != null) {
-                            context.write(new IntWritable(id), new Text(infoBoxText));
-                        }
-                    }
-                }
+                //NodeList nList = doc.getElementsByTagName("page");
+
+                //boolean debug = true;
+                //int count = 0;
+                //for (int temp = 0; temp < nList.getLength(); temp++) {
+                //    if (debug == true) {
+                //        if (count > 100) break;
+                //        else ++count;
+                //    }
+                //    Node nNode = nList.item(temp);
+                //    if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+                //        Element eElement = (Element) nNode;
+                //        String infoBoxText = parseInfoBox(getTagValue("text", eElement));
+                //        int id = Integer.parseInt(getTagValue("id", eElement));
+                //        if (infoBoxText != null) {
+                //            context.write(new IntWritable(id), new Text(infoBoxText));
+                //        }
+                //    }
+                //}
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -88,16 +95,18 @@ public class InfoboxGetter {
         JobConf conf = new JobConf(InfoboxGetter.class);
         conf.setJobName("InfoboxGetter");
 
-        conf.setOutputKeyClass(IntWritable.class);
+        conf.setOutputKeyClass(LongWritable.class);
         conf.setOutputValueClass(Text.class);
 
         conf.setMapperClass(Map.class);
+        conf.set("xmlinput.start", "<page>");
+        conf.set("xmlinput.end", "</page>");
 
-        conf.setInputFormat(TextInputFormat.class);
+        conf.setInputFormat(XmlInputFormat.class);
         conf.setOutputFormat(TextOutputFormat.class);
 
-        FileInputFormat.setInputPaths(conf, new Path("/user/hduser/hw1/hurricane-center-addresses.csv"));
-        FileOutputFormat.setOutputPath(conf, new Path("/user/hduser/hw1-b-output"));
+        FileInputFormat.setInputPaths(conf, new Path("/user/hduser"));
+        FileOutputFormat.setOutputPath(conf, new Path("/user/output"));
 
         JobClient.runJob(conf);
     }
