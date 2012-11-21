@@ -17,6 +17,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.Element;
 import java.io.File;
 import org.xml.sax.InputSource;
+import com.github.diaosi.BDAM.*;
 
 public class InfoboxGetter {
     public static class Map extends MapReduceBase implements Mapper<LongWritable, Text, LongWritable, Text> {
@@ -99,11 +100,11 @@ public class InfoboxGetter {
         conf.setOutputValueClass(Text.class);
 
         conf.setMapperClass(Map.class);
-        conf.set("xmlinput.start", "<page>");
-        conf.set("xmlinput.end", "</page>");
 
         conf.setInputFormat(XmlInputFormat.class);
         conf.setOutputFormat(TextOutputFormat.class);
+        conf.set("xmlinput.start", "<page>");
+        conf.set("xmlinput.end", "</page>");
 
         FileInputFormat.setInputPaths(conf, new Path("/user/hduser"));
         FileOutputFormat.setOutputPath(conf, new Path("/user/output"));
