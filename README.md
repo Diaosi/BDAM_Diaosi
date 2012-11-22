@@ -20,7 +20,7 @@ $ jar -cvfe /usr/local/hadoop/BDAM.jar com.github.diaosi.BDAM.DiaoSiDriver com/
 
 ```
 $ cd /usr/local/hadoop
-$ bin/hadoop jar BDAM.jar infoboxgetter -inputreader "StreamXmlRecordReader, begin=<!-- <page>,end=</page> -->"
+$ bin/hadoop jar BDAM.jar infoboxgetter -inputreader "StreamXmlRecordReader, begin=<page>,end=</page>"
 ```
 
 ### Check the result //TODO update later
