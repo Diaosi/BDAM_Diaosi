@@ -10,8 +10,19 @@ Identify pages that have infoboxes. You will scan the Wikipedia pages and genera
 If a page does not have an infobox, it will not have a line in the CSV file. The infobox_text should contain all text for the infobox, including the template name, attribute names and values.
 Note that the id for a Wikipedia page is its title.
 
-
 ## How to run it
+
+### The most simple way
+
+Create a new job flow in Amazon Elastic Map/Reduce with following configurations
+
+1)Hadoop version: 1.0.3
+
+2)Custom jar file: s3n://diaosi-mapreduce/pro1.jar
+
+3)Jar arguments: s3n://diaosi-mapreduce/raw_data s3n://<your-bucket-name>/<your-output-folder>
+
+### More sophisticated
 
 1)Create a new Java Project in Eclipse
 
@@ -23,9 +34,13 @@ Note that the id for a Wikipedia page is its title.
 
 5)Upload the jar you just generated to Amazon S3
 
-6)(Optional and we already have this done)Extract Bzip2-compressed wikipedia dumps to raw xml files and upload them to Amazon S3
+6)(Optional and we already have this done)
 
-7)Go to Amazon Elasti Map/Reduce, create a new job flow, run it with the first parameter as the input path and second one as the output path
+Extract Bzip2-compressed wikipedia dumps to raw xml files and upload them to Amazon S3,
+
+or use s3n://diaosi-mapreduce/raw_data as the input
+
+7)Go to Amazon Elastic Map/Reduce, create a new job flow, run the jar with the first parameter as the input path and second one as the output path
 
 8)Keep your finger crossed while the job flow is running until results are generated
 
