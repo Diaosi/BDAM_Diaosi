@@ -1,22 +1,22 @@
 BDAM_Diaosi
 ===========
 
-Big Data Analysis and Management Project
+Big Data Analysis and Management Course Project
 
 Author: Xiao Kan (0464716), Zhe Zhou (0457661)
 
+# Task description
+Identify pages that have infoboxes. You will scan the Wikipedia pages and generate a CSV file named infobox.csv with the following format for each line corresponding to a page that contains an infobox: <cade>page_id, infobox_text</code>
+If a page does not have an infobox, it will not have a line in the CSV file. The infobox_text should contain all text for the infobox, including the template name, attribute names and values.
+Note that the id for a Wikipedia page is its title.
+
+
 ## How to run it
 
-### Compile the Java code and put the jar to hadoop path
-
-```
-$ cd path/to/project
-$ javac -classpath /usr/local/hadoop/hadoop-core-1.0.4.jar -d . InfoboxGetter.java 
-$ javac -classpath /usr/local/hadoop/hadoop-core-1.0.4.jar:. -d . DiaoSiDriver.java 
-$ jar -cvfe /usr/local/hadoop/BDAM.jar com.github.diaosi.BDAM.DiaoSiDriver com/
-```
-
-### Run hadoop job
+1)Create a new Java Project in Eclipse
+2)Import the src folder to the project
+3)Add to build path dependency libraries where you can find them in the folder "libs"
+4)Export runnable jars with com.github.diaosi.BDAM.mapreduce.InfoboxGetter
 
 ```
 $ cd /usr/local/hadoop
