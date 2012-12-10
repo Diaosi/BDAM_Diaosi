@@ -87,7 +87,11 @@ public class TagCloud {
 		private String getRealCategory(String dirty) {
 			if (dirty != null) {
 				String[] cates = dirty.split("[|]");
-				return cates[0];
+				if (cates.length > 0) {
+					return cates[0];
+				} else {
+					return "";
+				}
 			} else {
 				return "";
 			}
