@@ -41,7 +41,7 @@ public class ExtractorTask {
 				OutputCollector<Text, Text> oc, Reporter reporter)
 				throws IOException {
 			BufferedReader fin = null;
-			InputStream is = null;
+			InputStream is = null;	
 			try {
 				String s3Path = value.toString();
 				URL url = new URL(s3Path);
