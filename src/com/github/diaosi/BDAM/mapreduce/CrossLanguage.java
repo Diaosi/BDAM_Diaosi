@@ -30,7 +30,7 @@ import org.xml.sax.InputSource;
 import com.github.diaosi.BDAM.inputformat.XmlInputFormat;
 
 public class CrossLanguage {
-	public static class MyMapper extends MapReduceBase implements
+	private static class MyMapper extends MapReduceBase implements
 			Mapper<LongWritable, Text, Text, IntWritable> {
 
 		private DocumentBuilderFactory dbFactory;
@@ -78,7 +78,7 @@ public class CrossLanguage {
 		}
 	}
 
-	public static class MyReducer extends MapReduceBase implements
+	private static class MyReducer extends MapReduceBase implements
 			Reducer<Text, IntWritable, Text, LongWritable> {
 
 		@Override
