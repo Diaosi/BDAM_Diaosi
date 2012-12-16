@@ -1,6 +1,7 @@
 package com.github.diaosi.BDAM.mapreduce;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -25,11 +26,17 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 public class CoOccurence {
+	//
+	// private static String format = "%s|%d,";
 
-	private static String format = "%s|%d,";
+	public static HashMap<String, Integer> map = null;
 
 	private static class MyMapper extends MapReduceBase implements
 			Mapper<Text, Text, Text, Text> {
+
+		private HashMap<String, Integer> map = new HashMap<String, Integer>(
+				93579);
+		private int MAX_NEIGHBORS = 30;
 
 		private String pat = "[^A-Za-z0-9]+";
 		private Splitter sp = Splitter.onPattern(pat).omitEmptyStrings();
@@ -58,7 +65,7 @@ public class CoOccurence {
 						if (i != j) {
 							String y = strCol[j];
 							if (x.compareTo(y) <= 0) {
-								sb.append(String.format(format, y, 1));
+								//sb.append(String.format(format, y, 1));
 							}
 						}
 					if (sb.length() > 0) {
@@ -110,6 +117,7 @@ public class CoOccurence {
 	}
 
 	public static void main(String[] args) throws Exception {
+		getDictionary();
 		JobConf conf = new JobConf(CoOccurence.class);
 		conf.setJobName("Co-occurence");
 		conf.setMapperClass(MyMapper.class);
@@ -128,4 +136,18 @@ public class CoOccurence {
 
 		JobClient.runJob(conf);
 	}
+
+	private static void getDictionary() {
+
+		try {
+			URL url = new URL(
+					"https://s3.amazonaws.com/diaosi-mapreduce/words_without_stopwords.txt");
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+
+		}
+
+	}
+
 }

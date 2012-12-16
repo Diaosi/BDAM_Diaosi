@@ -59,8 +59,10 @@ public class CountOfInfoboxes {
 		// }
 		System.out.format("Count of Lines: %d\n", countOfLine);
 		System.out.format("Count of Infoboxes: %d\n", countOfInfoboxes);
-		System.out.format("Count of Infoboxes with template: %d\n",
+		System.out.format("Count of Infoboxes without template: %d\n",
 				countOfNoTemplate);
+		System.out.format("Count of Pages with Infobox: %d\n",
+				countOfPagesWithInfobox);
 		System.out.format("Count of Pages: %d\n", countOfPages);
 	}
 }
