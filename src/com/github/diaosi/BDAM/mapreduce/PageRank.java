@@ -30,8 +30,8 @@ public class PageRank {
 		public void map(Text key, Text value,
 				OutputCollector<Text, Text> output, Reporter reporter)
 				throws IOException {
-			System.err.println("Key:" + key.toString());
-			System.err.println("Value:" + value.toString());
+//			System.err.println("Key:" + key.toString());
+//			System.err.println("Value:" + value.toString());
 			String k = key.toString().trim();
 			if (k.length() <= 0)
 				return;
@@ -52,7 +52,7 @@ public class PageRank {
 			StringBuilder sb = new StringBuilder();
 			while (values.hasNext()) {
 				sb.append(values.next().toString());
-				sb.append('\t');
+				sb.append('@');
 			}
 			output.collect(key, new Text(sb.toString()));
 		}
@@ -71,7 +71,7 @@ public class PageRank {
 				sb.append(values.next().toString());
 			}
 			output.collect(k,
-					new Text(String.format("%.8f\t%s", initPR, sb.toString())));
+					new Text(String.format("%.8f@%s", initPR, sb.toString())));
 		}
 
 	}
@@ -83,8 +83,10 @@ public class PageRank {
 		public void map(Text key, Text value,
 				OutputCollector<Text, Text> output, Reporter reporter)
 				throws IOException {
+			System.err.println("Key:" + key.toString());
+			System.err.println("Value:" + value.toString());
 
-			String[] tokens = value.toString().split("\\t");
+			String[] tokens = value.toString().split("@");
 			float PR = Float.parseFloat(tokens[0]);
 			output.collect(key, new Text("ST:" + value.toString()));
 			int cnt = tokens.length - 1;
@@ -109,7 +111,7 @@ public class PageRank {
 			while (values.hasNext()) {
 				String line = values.next().toString();
 				if (line.startsWith("ST:")) {
-					int pos = line.indexOf('\t');
+					int pos = line.indexOf('@');
 					if (pos != -1) {
 						cons = line.substring(0, pos);
 					}
@@ -119,7 +121,10 @@ public class PageRank {
 				}
 
 			}
-			output.collect(k, new Text(String.format("%.8f\t%s", total, cons)));
+			String ret = String.format("%.8f@", total);
+			if (cons != null)
+				ret += cons;
+			output.collect(k, new Text(ret));
 
 		}
 	}
@@ -156,11 +161,14 @@ public class PageRank {
 			step2.setMapOutputKeyClass(Text.class);
 			step2.setMapOutputValueClass(Text.class);
 
+			step2.setInputFormat(KeyValueTextInputFormat.class);
+			step2.setOutputFormat(TextOutputFormat.class);
+
 			step2.setJobName("Pagerank Step" + i);
 			FileInputFormat.setInputPaths(step2, new Path(args[1] + "/"
 					+ (i - 1) + "/"));
-			FileOutputFormat.setOutputPath(step2,
-					new Path(args[1] + "step" + i));
+			FileOutputFormat.setOutputPath(step2, new Path(args[1] + "/" + (i)
+					+ "/"));
 			RunningJob step2RJ = JobClient.runJob(step2);
 			step2RJ.waitForCompletion();
 		}
