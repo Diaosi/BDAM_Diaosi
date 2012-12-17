@@ -30,8 +30,6 @@ public class PageRank {
 		public void map(Text key, Text value,
 				OutputCollector<Text, Text> output, Reporter reporter)
 				throws IOException {
-//			System.err.println("Key:" + key.toString());
-//			System.err.println("Value:" + value.toString());
 			String k = key.toString().trim();
 			if (k.length() <= 0)
 				return;
@@ -54,6 +52,7 @@ public class PageRank {
 				sb.append(values.next().toString());
 				sb.append('@');
 			}
+			sb.delete(sb.length() - 1, sb.length());
 			output.collect(key, new Text(sb.toString()));
 		}
 	}
@@ -83,9 +82,6 @@ public class PageRank {
 		public void map(Text key, Text value,
 				OutputCollector<Text, Text> output, Reporter reporter)
 				throws IOException {
-			System.err.println("Key:" + key.toString());
-			System.err.println("Value:" + value.toString());
-
 			String[] tokens = value.toString().split("@");
 			float PR = Float.parseFloat(tokens[0]);
 			output.collect(key, new Text("ST:" + value.toString()));
@@ -130,25 +126,25 @@ public class PageRank {
 	}
 
 	public static void main(String[] args) throws Exception {
-		JobConf step1 = new JobConf(PageRank.class);
+		JobConf step0 = new JobConf(PageRank.class);
 
-		step1.setMapperClass(MapperStep1.class);
-		step1.setCombinerClass(CombinerStep1.class);
-		step1.setReducerClass(ReducerStep1.class);
+		step0.setMapperClass(MapperStep1.class);
+		step0.setCombinerClass(CombinerStep1.class);
+		step0.setReducerClass(ReducerStep1.class);
 
-		step1.setInputFormat(KeyValueTextInputFormat.class);
-		step1.setOutputFormat(TextOutputFormat.class);
+		step0.setInputFormat(KeyValueTextInputFormat.class);
+		step0.setOutputFormat(TextOutputFormat.class);
 
-		step1.setOutputKeyClass(Text.class);
-		step1.setOutputValueClass(Text.class);
+		step0.setOutputKeyClass(Text.class);
+		step0.setOutputValueClass(Text.class);
 
-		step1.setMapOutputKeyClass(Text.class);
-		step1.setMapOutputValueClass(Text.class);
+		step0.setMapOutputKeyClass(Text.class);
+		step0.setMapOutputValueClass(Text.class);
 
-		step1.setJobName("Pagerank Step1");
-		FileInputFormat.setInputPaths(step1, new Path(args[0]));
-		FileOutputFormat.setOutputPath(step1, new Path(args[1] + "/0/"));
-		RunningJob step1RJ = JobClient.runJob(step1);
+		step0.setJobName("Pagerank Step0");
+		FileInputFormat.setInputPaths(step0, new Path(args[0]));
+		FileOutputFormat.setOutputPath(step0, new Path(args[1] + "/0/"));
+		RunningJob step1RJ = JobClient.runJob(step0);
 		step1RJ.waitForCompletion();
 		for (int i = 1; i < 5; i++) {
 			JobConf step2 = new JobConf(PageRank.class);
