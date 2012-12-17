@@ -30,10 +30,12 @@ public class PageRank {
 		public void map(Text key, Text value,
 				OutputCollector<Text, Text> output, Reporter reporter)
 				throws IOException {
+			System.err.println("Key:" + key.toString());
+			System.err.println("Value:" + value.toString());
 			String k = key.toString().trim();
 			if (k.length() <= 0)
 				return;
-			String v = key.toString().trim();
+			String v = value.toString().trim();
 			if (v.length() <= 0)
 				return;
 			output.collect(new Text(k), new Text(v));
@@ -83,56 +85,86 @@ public class PageRank {
 				throws IOException {
 
 			String[] tokens = value.toString().split("\\t");
+			float PR = Float.parseFloat(tokens[0]);
+			output.collect(key, new Text("ST:" + value.toString()));
+			int cnt = tokens.length - 1;
+			for (int i = 1; i < tokens.length; i++) {
+				output.collect(new Text(tokens[i]),
+						new Text(String.format("PR:%.8f", PR / ((float) cnt))));
+			}
 
 		}
-
 	}
 
 	private static class ReducerStep2 extends MapReduceBase implements
 			Reducer<Text, Text, Text, Text> {
-		private float initPR = 1.0f;
 
 		@Override
 		public void reduce(Text k, Iterator<Text> values,
 				OutputCollector<Text, Text> output, Reporter reporter)
 				throws IOException {
-			StringBuilder sb = new StringBuilder();
-			while (values.hasNext()) {
-				sb.append(values.next().toString());
-			}
-			output.collect(k,
-					new Text(String.format("%.8f\t%s", initPR, sb.toString())));
-		}
+			String cons = null;
+			float total = 0.15f / N;
 
+			while (values.hasNext()) {
+				String line = values.next().toString();
+				if (line.startsWith("ST:")) {
+					int pos = line.indexOf('\t');
+					if (pos != -1) {
+						cons = line.substring(0, pos);
+					}
+				} else {
+					float cur = Float.parseFloat(line.substring(3));
+					total += cur;
+				}
+
+			}
+			output.collect(k, new Text(String.format("%.8f\t%s", total, cons)));
+
+		}
 	}
 
-	//
-	// private static String join(float mass, String[] adjs) {
-	// StringBuffer sb = new StringBuffer();
-	// sb.append(String.format("%.8f", mass));
-	// for (int i = 1; i < adjs.length; i++) {
-	// sb.append("$$$");
-	// sb.append(adjs[i]);
-	// }
-	// return sb.toString();
-	// }
-
 	public static void main(String[] args) throws Exception {
-		JobConf conf = new JobConf(PageRank.class);
-		conf.setMapperClass(MapperStep1.class);
-		conf.setCombinerClass(CombinerStep1.class);
-		conf.setReducerClass(ReducerStep1.class);
-		conf.setInputFormat(KeyValueTextInputFormat.class);
-		conf.setOutputFormat(TextOutputFormat.class);
-		conf.setOutputKeyClass(Text.class);
-		conf.setOutputValueClass(Text.class);
-		conf.setMapOutputKeyClass(Text.class);
-		conf.setMapOutputValueClass(Text.class);
-		conf.setJobName("Pagerank");
-		FileInputFormat.setInputPaths(conf, new Path(args[0]));
-		FileOutputFormat.setOutputPath(conf, new Path(args[1]));
-		RunningJob step1 = JobClient.runJob(conf);
-		step1.waitForCompletion();
+		JobConf step1 = new JobConf(PageRank.class);
+
+		step1.setMapperClass(MapperStep1.class);
+		step1.setCombinerClass(CombinerStep1.class);
+		step1.setReducerClass(ReducerStep1.class);
+
+		step1.setInputFormat(KeyValueTextInputFormat.class);
+		step1.setOutputFormat(TextOutputFormat.class);
+
+		step1.setOutputKeyClass(Text.class);
+		step1.setOutputValueClass(Text.class);
+
+		step1.setMapOutputKeyClass(Text.class);
+		step1.setMapOutputValueClass(Text.class);
+
+		step1.setJobName("Pagerank Step1");
+		FileInputFormat.setInputPaths(step1, new Path(args[0]));
+		FileOutputFormat.setOutputPath(step1, new Path(args[1] + "/0/"));
+		RunningJob step1RJ = JobClient.runJob(step1);
+		step1RJ.waitForCompletion();
+		for (int i = 1; i < 5; i++) {
+			JobConf step2 = new JobConf(PageRank.class);
+			step2.setMapperClass(MapperStep2.class);
+			step2.setReducerClass(ReducerStep2.class);
+
+			step2.setOutputKeyClass(Text.class);
+			step2.setOutputValueClass(Text.class);
+
+			step2.setMapOutputKeyClass(Text.class);
+			step2.setMapOutputValueClass(Text.class);
+
+			step2.setJobName("Pagerank Step" + i);
+			FileInputFormat.setInputPaths(step2, new Path(args[1] + "/"
+					+ (i - 1) + "/"));
+			FileOutputFormat.setOutputPath(step2,
+					new Path(args[1] + "step" + i));
+			RunningJob step2RJ = JobClient.runJob(step2);
+			step2RJ.waitForCompletion();
+		}
+
 		// input = output;
 		// output = output + '0';
 		// }
