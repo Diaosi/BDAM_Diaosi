@@ -16,8 +16,8 @@ public class CountOfInfoboxes {
 		BufferedReader fin = new BufferedReader(
 				new InputStreamReader(
 						new FileInputStream(
-								"/media/C4C85AD1C85AC17A/enwiki-latest-pages-articles.xml")),
-				1024 * 1024 * 100);
+								"/e_drive/Datasets/Wikipedia/enwiki-latest-pages-articles.xml")),
+				1024 * 1024);
 		List<String> list = new ArrayList<String>();
 		String line = null;
 		long countOfInfoboxes = 0;

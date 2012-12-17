@@ -1,10 +1,11 @@
 package com.github.diaosi.BDAM.mapreduce;
 
 import java.io.IOException;
-import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
 import org.apache.hadoop.fs.Path;
@@ -23,19 +24,14 @@ import org.apache.hadoop.mapred.TextOutputFormat;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 public class CoOccurence {
-	//
-	// private static String format = "%s|%d,";
 
-	public static HashMap<String, Integer> map = null;
+	private static String format = "%s|%d,";
 
 	private static class MyMapper extends MapReduceBase implements
 			Mapper<Text, Text, Text, Text> {
 
-		private HashMap<String, Integer> map = new HashMap<String, Integer>(
-				93579);
 		private int MAX_NEIGHBORS = 30;
 
 		private String pat = "[^A-Za-z0-9]+";
@@ -45,38 +41,31 @@ public class CoOccurence {
 		public void map(Text key, Text value,
 				OutputCollector<Text, Text> output, Reporter reporter)
 				throws IOException {
-			String v = value.toString().toLowerCase();
-			Iterable<String> strs = sp.split(v);
-			HashSet<String> set = Sets.newHashSet();
-			for (String s : strs) {
-				if (s.length() > 0) {
-					set.add(s.toLowerCase());
+
+			String str = value.toString().toLowerCase();
+			Iterable<String> strs = sp.split(str);
+			List<String> wordList = new ArrayList<String>();
+			
+			for (String s : strs)
+				if (s.length() > 1 && s.length() < 50)
+					wordList.add(s);
+			
+			for (int i = 0; i < wordList.size(); i++) {
+				String x = wordList.get(i);
+				Text k = new Text(x);
+				for (int j = i + 1; j < Math.min(wordList.size(), i
+						+ MAX_NEIGHBORS); j++) {
+					String y = wordList.get(j);
+					if (x.compareTo(y) >= 0) {
+						String t = x;
+						x = y;
+						y = t;
+					}
+					Text v = new Text(String.format(format, y, 1));
+					output.collect(k, v);
 				}
 			}
 
-			String[] strCol = set.toArray(new String[] {});
-			set.clear();
-			set = null;
-			for (int i = 0; i < strCol.length; i++)
-				if (strCol[i].length() > 0) {
-					StringBuilder sb = new StringBuilder();
-					String x = strCol[i];
-					for (int j = 0; j < strCol.length; j++)
-						if (i != j) {
-							String y = strCol[j];
-							if (x.compareTo(y) <= 0) {
-								//sb.append(String.format(format, y, 1));
-							}
-						}
-					if (sb.length() > 0) {
-						output.collect(new Text(x), new Text(sb.toString()));
-						// System.err.format("%d, %d", x, sb.toString());
-					}
-					sb = null;
-				}
-			strCol = null;
-			strs = null;
-			v = null;
 		}
 	}
 
@@ -106,10 +95,10 @@ public class CoOccurence {
 				}
 			}
 			StringBuffer sb = new StringBuffer();
-			for (String key : map.keySet()) {
-				sb.append(key);
+			for (Entry<String, Integer> entry : map.entrySet()) {
+				sb.append(entry.getKey());
 				sb.append('|');
-				sb.append(map.get(key));
+				sb.append(entry.getValue());
 				sb.append(',');
 			}
 			output.collect(k, new Text(sb.toString()));
@@ -117,7 +106,6 @@ public class CoOccurence {
 	}
 
 	public static void main(String[] args) throws Exception {
-		getDictionary();
 		JobConf conf = new JobConf(CoOccurence.class);
 		conf.setJobName("Co-occurence");
 		conf.setMapperClass(MyMapper.class);
@@ -129,25 +117,10 @@ public class CoOccurence {
 		conf.setOutputValueClass(Text.class);
 		conf.setMapOutputKeyClass(Text.class);
 		conf.setMapOutputValueClass(Text.class);
-		conf.set("mapred.map.child.java.opts", "-Xmx1024m");
-		conf.set("mapred.reduce.child.java.opts", "-Xmx1024m");
 		FileInputFormat.setInputPaths(conf, new Path(args[0]));
 		FileOutputFormat.setOutputPath(conf, new Path(args[1]));
 
 		JobClient.runJob(conf);
-	}
-
-	private static void getDictionary() {
-
-		try {
-			URL url = new URL(
-					"https://s3.amazonaws.com/diaosi-mapreduce/words_without_stopwords.txt");
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-
-		}
-
 	}
 
 }
