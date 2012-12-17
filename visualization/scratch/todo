@@ -1,0 +1,16 @@
+* Count number of pages that have an infobox, and the number of infoboxes that do not use a template
+- Group pages according to the kind of infobox they contain
+* Build a histogram that shows the distribution of cross-language links across different languages, i.e., for each language show the total number of links for that language
+* Build a histogram that shows the recency of the pages, i.e., the histogram should how many pages have been modified on a particular date. You can use the last date of change for the pages.
+* Group articles based on their recency and display a tag cloud for each group. You can decide on the granularity of the group based on the recency histogram.
+- Compute page rank for each wikipedia page and display the top 100 with the highest page rank
+* Build a histogram that shows the distribution of pages across categories, i.e., the number of pages in each category
+* Some pages are assigned to multiple categories. Build a histogram that shows the number of pages that have 1, 2, 3, ..., n categories.
+- Compute the word co-occurrence matrix (i.e., number of times word w_i occurs with word w_j within an article) 
+- Report
+- PPT
+
+================
+- haven't done
++ done with data, but do not have visualization
+* have data and visualization

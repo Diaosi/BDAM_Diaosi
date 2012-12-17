@@ -101,8 +101,8 @@ public class CategoryPage {
 	}
 	
 	public static void main(String[] args) throws Exception {
-		JobConf conf = new JobConf(TagCloud.class);
-		conf.setJobName("TagCloud");
+		JobConf conf = new JobConf(CategoryPage.class);
+		conf.setJobName("CategoryPage");
 
 		conf.setOutputKeyClass(Text.class);
 		conf.setOutputValueClass(IntWritable.class);
