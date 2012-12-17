@@ -13,6 +13,7 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.compress.bzip2.CBZip2InputStream;
 import org.apache.hadoop.mapred.FileInputFormat;
+import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MapReduceBase;
@@ -22,6 +23,7 @@ import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.TextInputFormat;
 
 import com.csvreader.CsvWriter;
+import com.github.diaosi.BDAM.outputformat.CsvOutputFormat;
 
 public class ExtractorTask {
 
@@ -41,7 +43,7 @@ public class ExtractorTask {
 				OutputCollector<Text, Text> oc, Reporter reporter)
 				throws IOException {
 			BufferedReader fin = null;
-			InputStream is = null;	
+			InputStream is = null;
 			try {
 				String s3Path = value.toString();
 				URL url = new URL(s3Path);
@@ -119,7 +121,7 @@ public class ExtractorTask {
 		conf.setOutputFormat(CsvOutputFormat.class);
 		conf.setNumReduceTasks(0);
 		FileInputFormat.setInputPaths(conf, args[1]);
-		CsvOutputFormat.setOutputPath(conf, new Path(args[2]));
+		FileOutputFormat.setOutputPath(conf, new Path(args[2]));
 		JobClient.runJob(conf);
 	}
 

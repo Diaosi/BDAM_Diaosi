@@ -1,11 +1,14 @@
 package com.github.diaosi.BDAM.mapreduce;
 
 import java.io.IOException;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.regex.Pattern;
 
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
@@ -19,74 +22,105 @@ import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.TextOutputFormat;
 
+import com.google.common.base.Splitter;
+import com.google.common.collect.Maps;
+
 public class CoOccurence {
 
+	private static String format = "%s|%d,";
+
 	private static class MyMapper extends MapReduceBase implements
-			Mapper<Text, Text, Text, IntWritable> {
+			Mapper<Text, Text, Text, Text> {
 
-		private static String pat = "[\\~\\`\\!\\@\\#\\$\\%\\^\\&\\*\\(\\)\\_\\-\\+\\=\\|\\\\\\\\}\\]\\{\\[\\:\\;\\'\\\\\"\\?\\/\\>\\.\\<\\,\\ ]";
+		private int MAX_NEIGHBORS = 30;
 
-		private static String format = "%s,%s";
+		private String pat = "[^A-Za-z0-9]+";
+		private Splitter sp = Splitter.onPattern(pat).omitEmptyStrings();
 
 		@Override
 		public void map(Text key, Text value,
-				OutputCollector<Text, IntWritable> output, Reporter reporter)
+				OutputCollector<Text, Text> output, Reporter reporter)
 				throws IOException {
-			IntWritable one = new IntWritable(1);
-			String v = value.toString();
-			String[] strs = v.split(pat);
-			HashSet<String> set = new HashSet<String>();
-			for (String s : strs) {
-				if (!"".equals(s)) {
-					set.add(s);
+
+			String str = value.toString().toLowerCase();
+			Iterable<String> strs = sp.split(str);
+			List<String> wordList = new ArrayList<String>();
+			
+			for (String s : strs)
+				if (s.length() > 1 && s.length() < 50)
+					wordList.add(s);
+			
+			for (int i = 0; i < wordList.size(); i++) {
+				String x = wordList.get(i);
+				Text k = new Text(x);
+				for (int j = i + 1; j < Math.min(wordList.size(), i
+						+ MAX_NEIGHBORS); j++) {
+					String y = wordList.get(j);
+					if (x.compareTo(y) >= 0) {
+						String t = x;
+						x = y;
+						y = t;
+					}
+					Text v = new Text(String.format(format, y, 1));
+					output.collect(k, v);
 				}
 			}
-			String[] strCol = set.toArray(new String[] {});
-			for (int i = 0; i < strCol.length; i++)
-				for (int j = 0; j < strCol.length; j++)
-					if (i != j) {
-						String x = strCol[i];
-						String y = strCol[j];
-						if (x.compareTo(y) <= 0) {
-							String k = String.format(format, x, y);
-							output.collect(new Text(k), one);
-						}
 
-					}
 		}
 	}
 
 	private static class MyReducer extends MapReduceBase implements
-			Reducer<Text, IntWritable, Text, IntWritable> {
+			Reducer<Text, Text, Text, Text> {
+
+		private Pattern pat1 = Pattern.compile(",");
+		private Pattern pat2 = Pattern.compile("\\|");
 
 		@Override
-		public void reduce(Text k, Iterator<IntWritable> vs,
-				OutputCollector<Text, IntWritable> output, Reporter reporter)
+		public void reduce(Text k, Iterator<Text> vs,
+				OutputCollector<Text, Text> output, Reporter reporter)
 				throws IOException {
-			int cnt = 0;
+			HashMap<String, Integer> map = Maps.newHashMap();
 			while (vs.hasNext()) {
-				cnt += vs.next().get();
+				Text value = vs.next();
+				String pairs[] = pat1.split(value.toString());
+				for (String pair : pairs) {
+					String[] s = pat2.split(pair);
+					String key = s[0];
+					int count = Integer.parseInt(s[1]);
+					Integer cur = map.get(key);
+					if (cur != null) {
+						count += cur;
+					}
+					map.put(key, count);
+				}
 			}
-			output.collect(k, new IntWritable(cnt));
+			StringBuffer sb = new StringBuffer();
+			for (Entry<String, Integer> entry : map.entrySet()) {
+				sb.append(entry.getKey());
+				sb.append('|');
+				sb.append(entry.getValue());
+				sb.append(',');
+			}
+			output.collect(k, new Text(sb.toString()));
 		}
-
 	}
 
 	public static void main(String[] args) throws Exception {
 		JobConf conf = new JobConf(CoOccurence.class);
-		conf.setJobName("CountOfPages");
+		conf.setJobName("Co-occurence");
 		conf.setMapperClass(MyMapper.class);
-		// conf.setCombinerClass(MyCombiner.class);
+		conf.setCombinerClass(MyReducer.class);
 		conf.setReducerClass(MyReducer.class);
 		conf.setInputFormat(KeyValueTextInputFormat.class);
 		conf.setOutputFormat(TextOutputFormat.class);
 		conf.setOutputKeyClass(Text.class);
-		conf.setOutputValueClass(IntWritable.class);
+		conf.setOutputValueClass(Text.class);
 		conf.setMapOutputKeyClass(Text.class);
-		conf.setMapOutputValueClass(IntWritable.class);
+		conf.setMapOutputValueClass(Text.class);
 		FileInputFormat.setInputPaths(conf, new Path(args[0]));
 		FileOutputFormat.setOutputPath(conf, new Path(args[1]));
 
 		JobClient.runJob(conf);
 	}
+
 }

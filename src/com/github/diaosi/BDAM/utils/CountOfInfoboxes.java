@@ -16,8 +16,8 @@ public class CountOfInfoboxes {
 		BufferedReader fin = new BufferedReader(
 				new InputStreamReader(
 						new FileInputStream(
-								"/media/C4C85AD1C85AC17A/enwiki-latest-pages-articles.xml")),
-				1024 * 1024 * 100);
+								"/e_drive/Datasets/Wikipedia/enwiki-latest-pages-articles.xml")),
+				1024 * 1024);
 		List<String> list = new ArrayList<String>();
 		String line = null;
 		long countOfInfoboxes = 0;
@@ -59,8 +59,10 @@ public class CountOfInfoboxes {
 		// }
 		System.out.format("Count of Lines: %d\n", countOfLine);
 		System.out.format("Count of Infoboxes: %d\n", countOfInfoboxes);
-		System.out.format("Count of Infoboxes with template: %d\n",
+		System.out.format("Count of Infoboxes without template: %d\n",
 				countOfNoTemplate);
+		System.out.format("Count of Pages with Infobox: %d\n",
+				countOfPagesWithInfobox);
 		System.out.format("Count of Pages: %d\n", countOfPages);
 	}
 }

@@ -1,7 +1,6 @@
 package com.github.diaosi.BDAM.mapreduce;
 
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.Iterator;
 
 import org.apache.hadoop.fs.Path;
@@ -16,81 +15,113 @@ import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
+import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.mapred.TextOutputFormat;
 
 public class PageRank {
-	private static String pat = "m:%.8f";
-	private final static int N = 10000000;
+
+	private final static int N = 12873488;
 	private final static float d = 0.85f; // damping factor
 
-	private static class MyMapper extends MapReduceBase implements
+	private static class MapperStep1 extends MapReduceBase implements
 			Mapper<Text, Text, Text, Text> {
 
 		@Override
 		public void map(Text key, Text value,
 				OutputCollector<Text, Text> output, Reporter reporter)
 				throws IOException {
-			if (key.toString().trim().length() <= 0)
+			String k = key.toString().trim();
+			if (k.length() <= 0)
 				return;
-			// System.err.format("%s, %s\n", key.toString(), value.toString());
-			String[] adj = value.toString().split("[$$$]");
-			float mass = Float.parseFloat(adj[0]);
-			output.collect(key, value); // recover graph
-			for (int i = 1; i < adj.length; i++) {
-				output.collect(
-						key,
-						new Text(String.format(pat, mass
-								/ ((float) (adj.length - 1)))));
-			}
-
+			String v = key.toString().trim();
+			if (v.length() <= 0)
+				return;
+			output.collect(new Text(k), new Text(v));
 		}
 	}
 
-	private static class MyReducer extends MapReduceBase implements
+	private static class CombinerStep1 extends MapReduceBase implements
 			Reducer<Text, Text, Text, Text> {
 
 		@Override
-		public void reduce(Text k, Iterator<Text> vs,
+		public void reduce(Text key, Iterator<Text> values,
+				OutputCollector<Text, Text> output, Reporter reporter)
+				throws IOException {
+			StringBuilder sb = new StringBuilder();
+			while (values.hasNext()) {
+				sb.append(values.next().toString());
+				sb.append('\t');
+			}
+			output.collect(key, new Text(sb.toString()));
+		}
+	}
+
+	private static class ReducerStep1 extends MapReduceBase implements
+			Reducer<Text, Text, Text, Text> {
+		private float initPR = 1.0f;
+
+		@Override
+		public void reduce(Text k, Iterator<Text> values,
+				OutputCollector<Text, Text> output, Reporter reporter)
+				throws IOException {
+			StringBuilder sb = new StringBuilder();
+			while (values.hasNext()) {
+				sb.append(values.next().toString());
+			}
+			output.collect(k,
+					new Text(String.format("%.8f\t%s", initPR, sb.toString())));
+		}
+
+	}
+
+	private static class MapperStep2 extends MapReduceBase implements
+			Mapper<Text, Text, Text, Text> {
+
+		@Override
+		public void map(Text key, Text value,
 				OutputCollector<Text, Text> output, Reporter reporter)
 				throws IOException {
 
-			float mass = (1 - d) / N;
-			String adjCol = null;
-			while (vs.hasNext()) {
-				String v = vs.next().toString();
-				if (v.startsWith("m:")) {
-					mass += Float.parseFloat(v.substring(2)) * d;
-				} else {
-					adjCol = v;
-				}
-			}
-			if (adjCol != null) {
-				String[] adjs = adjCol.split(pat);
-				String ret = join(mass, adjs);
-				output.collect(k, new Text(ret));
-				System.out.println(k.toString() + adjCol);
-			}
+			String[] tokens = value.toString().split("\\t");
 
 		}
 
 	}
 
-	private static String join(float mass, String[] adjs) {
-		StringBuffer sb = new StringBuffer();
-		sb.append(String.format("%.8f", mass));
-		for (int i = 1; i < adjs.length; i++) {
-			sb.append("$$$");
-			sb.append(adjs[i]);
+	private static class ReducerStep2 extends MapReduceBase implements
+			Reducer<Text, Text, Text, Text> {
+		private float initPR = 1.0f;
+
+		@Override
+		public void reduce(Text k, Iterator<Text> values,
+				OutputCollector<Text, Text> output, Reporter reporter)
+				throws IOException {
+			StringBuilder sb = new StringBuilder();
+			while (values.hasNext()) {
+				sb.append(values.next().toString());
+			}
+			output.collect(k,
+					new Text(String.format("%.8f\t%s", initPR, sb.toString())));
 		}
-		return sb.toString();
+
 	}
+
+	//
+	// private static String join(float mass, String[] adjs) {
+	// StringBuffer sb = new StringBuffer();
+	// sb.append(String.format("%.8f", mass));
+	// for (int i = 1; i < adjs.length; i++) {
+	// sb.append("$$$");
+	// sb.append(adjs[i]);
+	// }
+	// return sb.toString();
+	// }
 
 	public static void main(String[] args) throws Exception {
-		// for (int i = 0; i < 5; i++) {
 		JobConf conf = new JobConf(PageRank.class);
-		String input = args[0], output = args[1];
-		conf.setMapperClass(MyMapper.class);
-		conf.setReducerClass(MyReducer.class);
+		conf.setMapperClass(MapperStep1.class);
+		conf.setCombinerClass(CombinerStep1.class);
+		conf.setReducerClass(ReducerStep1.class);
 		conf.setInputFormat(KeyValueTextInputFormat.class);
 		conf.setOutputFormat(TextOutputFormat.class);
 		conf.setOutputKeyClass(Text.class);
@@ -98,9 +129,10 @@ public class PageRank {
 		conf.setMapOutputKeyClass(Text.class);
 		conf.setMapOutputValueClass(Text.class);
 		conf.setJobName("Pagerank");
-		FileInputFormat.setInputPaths(conf, new Path(input));
-		FileOutputFormat.setOutputPath(conf, new Path(output));
-		JobClient.runJob(conf);
+		FileInputFormat.setInputPaths(conf, new Path(args[0]));
+		FileOutputFormat.setOutputPath(conf, new Path(args[1]));
+		RunningJob step1 = JobClient.runJob(conf);
+		step1.waitForCompletion();
 		// input = output;
 		// output = output + '0';
 		// }
