@@ -39,3 +39,7 @@ or use `s3n://diaosi-mapreduce/raw_data` as the input
 2. They should be in CSV format that can be open by any spreedsheet softwares
 3. Note that Microsoft Excel is not powerful enough to handle opening any UTF-8 encoded csv files
 4. Also note that different line separators have been used in the generated csv files, we use `\r\n` as the real line separtor and `\n` is what we used inside the infobox
+
+## Phase II
+
+The Phase II codes are under [src/com/github/diaosi/BDAM/mapreduce](https://github.com/Diaosi/BDAM_Diaosi/tree/master/src/com/github/diaosi/BDAM/mapreduce)(hadoop code), [src/com/github/diaosi/BDAM/utils](https://github.com/Diaosi/BDAM_Diaosi/tree/master/src/com/github/diaosi/BDAM/utils)(single node code), and [visualization](https://github.com/Diaosi/BDAM_Diaosi/tree/master/visualization)(visualization code).
