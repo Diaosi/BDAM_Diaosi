@@ -146,7 +146,8 @@ public class PageRank {
 		FileOutputFormat.setOutputPath(step0, new Path(args[1] + "/0/"));
 		RunningJob step1RJ = JobClient.runJob(step0);
 		step1RJ.waitForCompletion();
-		for (int i = 1; i < 5; i++) {
+		int i;
+		for (i = 1; i < 10; i++) {
 			JobConf step2 = new JobConf(PageRank.class);
 			step2.setMapperClass(MapperStep2.class);
 			step2.setReducerClass(ReducerStep2.class);
@@ -168,6 +169,22 @@ public class PageRank {
 			RunningJob step2RJ = JobClient.runJob(step2);
 			step2RJ.waitForCompletion();
 		}
+		// sort pageranks
+		JobConf sort = new JobConf(SortRank.class);
+		sort.setMapperClass(SortRank.Map.class);
+
+		sort.setMapOutputKeyClass(Text.class);
+		sort.setMapOutputValueClass(Text.class);
+
+		sort.setInputFormat(KeyValueTextInputFormat.class);
+		sort.setOutputFormat(TextOutputFormat.class);
+
+		sort.setJobName("Sort Pagerank");
+		FileInputFormat.setInputPaths(sort, new Path(args[1] + "/" + (i - 1)
+				+ "/"));
+		FileOutputFormat.setOutputPath(sort, new Path(args[1] + "/sorted/"));
+		RunningJob sortRJ = JobClient.runJob(sort);
+		sortRJ.waitForCompletion();
 
 		// input = output;
 		// output = output + '0';

@@ -24,7 +24,7 @@ public class SortRank {
 		public void map(Text key, Text value,
 				OutputCollector<Text, Text> output, Reporter reporter)
 				throws IOException {
-			String outValue = value.toString().split("\t")[0];
+			String outValue = value.toString().split("@")[0];
 			output.collect(new Text(outValue), key);
 		}
 	}
