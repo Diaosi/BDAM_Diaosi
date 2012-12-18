@@ -3,8 +3,8 @@
     "children": [
     {"name": "Without infobox", "size": 12858425},
     {"name": "With infobox", "children": [
-        {"name": "With template", "size": 17223},
-        {"name": "Without template", "size": 146}
+        {"name": "With template", "size": 17760161},
+        {"name": "Without template", "size": 294}
         ]}
     ]
 }
